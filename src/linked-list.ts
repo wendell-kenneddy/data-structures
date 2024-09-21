@@ -1,115 +1,134 @@
+import { areEquivalent } from "./utils/comparison";
+
 interface Person {
   name: string;
   age: number;
 }
 
 export class Node<U> {
-  private next: Node<U> | null = null;
+  private _next: Node<U> | null = null;
 
-  constructor(private readonly data: U) {}
+  constructor(private readonly _data: U) {}
 
-  getData() {
-    return this.data;
+  get data(): U {
+    return this._data;
   }
 
-  getNext() {
-    return this.next;
+  get next(): Node<U> | null {
+    return this._next;
   }
 
-  setNext(next: Node<U> | null) {
-    this.next = next;
+  set next(next: Node<U> | null) {
+    this._next = next;
   }
 }
 
 export class LinkedList<T> {
-  private head: Node<T> | null = null;
-  private count = 0;
+  private _head: Node<T> | null = null;
+  private _length: number = 0;
 
-  insert(data: T) {
-    if (!this.head) {
-      this.head = new Node(data);
-      this.count++;
+  insert(data: T): void {
+    if (!this._head) {
+      this._head = new Node(data);
+      this._length++;
       return;
     }
 
-    const node = new Node(data);
-    node.setNext(this.head);
-    this.head = node;
-    this.count++;
+    const newNode = new Node(data);
+    newNode.next = this._head;
+    this._head = newNode;
+    this._length++;
   }
 
-  insertBefore(data: T, predicate: T) {
-    if (this.count == 0) throw new Error("List is empty.");
-    let current = this.head!;
+  insertBefore(data: T, predicate: T): void {
+    let current: Node<T> | null = this._head;
 
-    for (let i = 0; i < this.count; i++) {
-      if (JSON.stringify(current.getData()) == JSON.stringify(predicate)) {
+    while (current) {
+      if (areEquivalent(current.data, predicate)) {
         const newNode = new Node(data);
-        newNode.setNext(current.getNext());
-        current.setNext(newNode);
-        this.count++;
+        newNode.next = current.next;
+        current.next = newNode;
+        this._length++;
         return;
       }
 
-      current = current.getNext()!;
+      current = current.next;
     }
 
     throw new Error("Predicate not found.");
   }
 
-  includes(predicate: T) {
-    if (this.count == 0) throw new Error("List is empty.");
-    let current = this.head!;
+  includes(predicate: T): boolean {
+    let current: Node<T> | null = this._head;
 
-    for (let i = 0; i < this.count; i++) {
-      if (JSON.stringify(current.getData()) == JSON.stringify(predicate)) return true;
-      current = current.getNext()!;
+    while (current) {
+      if (areEquivalent(current.data, predicate)) return true;
+      current = current.next;
     }
 
     return false;
   }
 
-  traverse(callback: (current: Node<T>, index: number) => void) {
-    if (this.count == 0) throw new Error("List is empty.");
-    let current = this.head!;
+  traverse(callback: (current: Node<T>) => void): void {
+    let current: Node<T> | null = this._head;
 
-    for (let i = 0; i < this.count; i++) {
-      callback(current, i);
-      current = current.getNext()!;
+    while (current) {
+      callback(current);
+      current = current.next;
     }
   }
 
-  peek() {
-    return { ...this.head };
-  }
+  deleteTail(): void {
+    if (this._length == 1) return this.deleteHead();
+    let current: Node<T> | null = this._head;
 
-  deleteTail() {
-    if (this.count == 0) throw new Error("List is empty.");
-    let current = this.head!;
-
-    do {
-      if (!current.getNext()?.getNext()) {
-        current.setNext(null);
-        this.count--;
+    while (current) {
+      if (!current.next?.next) {
+        current.next = null;
+        this._length--;
       }
-      current = current.getNext()!;
-    } while (current);
+      current = current.next;
+    }
   }
 
-  deleteHead() {
-    if (!this.head) return;
-    this.head = this.head.getNext();
-    this.count--;
+  deleteHead(): void {
+    if (this._head) {
+      this._head = this._head.next;
+      this._length--;
+    }
   }
 
-  length() {
-    return this.count;
+  clear(): void {
+    this._head = null;
+    this._length = 0;
+  }
+
+  get length(): number {
+    return this._length;
+  }
+
+  get tail(): Node<T> | null {
+    if (this._length == 1) return this._head;
+    let current = this._head;
+
+    for (let i = 0; i < this._length; i++) {
+      if (i == this._length - 1) return current;
+      current = current!.next;
+    }
+
+    return current;
+  }
+
+  get head(): Node<T> | null {
+    return this._head;
   }
 }
 
-const myList = new LinkedList<Person>();
-myList.insert({ name: "Adam", age: 21 });
-myList.insert({ name: "Mary", age: 33 });
-myList.insert({ name: "Kin", age: 19 });
-myList.insertBefore({ name: "Edwin", age: 221 }, { name: "Kin", age: 19 });
-myList.traverse((n, i) => console.log(n.getData()));
+// const myList = new LinkedList<Person>();
+// myList.insert({ name: "Adam", age: 21 });
+// myList.insert({ name: "Mary", age: 33 });
+// myList.insert({ name: "Kin", age: 19 });
+// myList.insertBefore({ name: "Jhonny", age: 22 }, { name: "Kin", age: 19 });
+// console.log(myList.length, myList.head);
+// myList.traverse((n) => console.log(n.data));
+// console.log(myList.tail?.data);
