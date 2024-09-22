@@ -1,34 +1,43 @@
-import { LinkedList } from "./linked-list";
+import { DoublyLinkedList } from "./doubly-linked-list";
 
-// TODO: add validations and use doubly-linked-lists
 export class Queue<T> {
-  private readonly list: LinkedList<T> = new LinkedList<T>();
+  readonly #list: DoublyLinkedList<T> = new DoublyLinkedList<T>();
+  #limit: number;
 
-  constructor(private readonly _limit: number) {}
-
-  enqueue(item: T): void {
-    if (this.list.length == this._limit) throw new Error("Maxinum number of items queued.");
-    if (this.list.length == 0) return this.list.insert(item);
-    this.list.insertBefore(item, this.list.tail?.data!);
+  constructor(limit: number) {
+    this.#limit = limit;
   }
 
-  dequeue(): T {
-    const item = this.list.head?.data!;
-    this.list.deleteHead();
-    return item;
-  }
-
-  clear(): void {
-    this.list.clear();
-  }
-
-  peek(): T {
-    const item = this.list.head?.data!;
-    return item;
+  get limit(): number {
+    return this.#limit;
   }
 
   get length(): number {
-    return this.list.length;
+    return this.#list.length;
+  }
+
+  enqueue(item: T): void {
+    if (this.#list.length == this.#limit) throw new Error("Maxinum number of items queued.");
+    this.#list.insertAtTail(item);
+  }
+
+  dequeue(): T | null {
+    if (this.#list.length) {
+      const item = this.#list.head?.data!;
+      this.#list.deleteHead();
+      return item;
+    }
+
+    return null;
+  }
+
+  clear(): void {
+    this.#list.clear();
+  }
+
+  peek(): T | null {
+    const item = this.#list.head?.data;
+    return item || null;
   }
 }
 
